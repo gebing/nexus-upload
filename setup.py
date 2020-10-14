@@ -47,7 +47,7 @@ setup(
   author='gebing',
   author_email='gebing@foxmail.com',
   packages=find_packages(),
-  scripts=['up'],
+  scripts=['nexus-upload'],
   include_package_data=True,
   platforms = "any",
   install_requires=[
