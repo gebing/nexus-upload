@@ -1,6 +1,7 @@
 # -*- coding: UTF-8 -*-
 import os
 import stat
+import shutil
 import argparse
 import requests
 import paramiko
@@ -25,6 +26,8 @@ def get_flags():
                    help='Remote ssh\'s host and port, eg: ssh.server.com:22')
   cmd.add_argument('--ssh-login', type=str, metavar='<user:pass>',
                    help='Remote ssh\'s username and password, eg: root:pass')
+  cmd.add_argument('--clean', default=False, action='store_true',
+                   help='Clean local maven repository for specific packages')
   flags = cmd.parse_args()
   # merge nexus api url
   from requests.compat import urljoin, urlparse
@@ -59,6 +62,14 @@ def get_flags():
   if not len(flags.package):
     return cmd.error('the following arguments are invalid: -p/--package')
   return flags
+
+
+def clean_package(packages):
+  print("Cleaning local maven repository for packages %s..." % ([i['name'] for i in packages]))
+  root = os.path.join(os.environ['HOME'], '.m2', 'repository')
+  for i in packages:
+    path = os.path.join(root, i['groupId'].replace('.', os.sep), i['artifactId'], i['version'])
+    shutil.rmtree(path, True)
 
 
 def open_package(package, flags):
@@ -116,6 +127,8 @@ def upload_package(package, flags):
 
 def main():
   flags = get_flags()
+  if flags.clean:
+    clean_package(flags.package)
   print("Start to upload packages %s to repository '%s' of Nexus server %s..." % (
     [i['name'] for i in flags.package], flags.repository, flags.server))
   for i in flags.package:
